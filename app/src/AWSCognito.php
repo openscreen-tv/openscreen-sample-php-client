@@ -1,22 +1,21 @@
 <?php
 namespace AWSCognito;
-
+require __DIR__ . '/../vendor/autoload.php';
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
-class AWSCognitoWrapper
-{
+class AWSCognitoWrapper {
   private const COOKIE_NAME = 'openscreen-cognito-access-token';
+  private const CONFIG_URL = 'https://config.openscreen.com/api-production.json';
 
-  public $useCookie
+  public bool $useCookie;
 
-  private $client
   private $user = null;
-  private $clientId
-  private $userPoolId
+  private $client;
+  private $clientId;
+  private $userPoolId;
 
-  public function __construct(boolval $useCookie)
-
-    $this->$useCookie = $useCookie
+  public function __construct(?bool $useCookie = false) {
+    $this->$useCookie = $useCookie;
 
     $this->client = new CognitoIdentityProviderClient([
       'version' => '2016-04-18',
@@ -32,23 +31,26 @@ class AWSCognitoWrapper
           // an exception indicates the accesstoken is incorrect - $this->user will still be null
       }
     }
+  }
 
   public function authenticate(string $username, string $password) : string {
     try {
-      $result = $this->client->adminInitiateAuth([
-        'AuthFlow' => 'ADMIN_NO_SRP_AUTH',
-        'ClientId' => '25vb27hph3igpihm3etk5hu52n',
-        'UserPoolId' => 'us-east-1_wQ96wwE8H',
+      $config = file_get_contents(self::CONFIG_URL);
+      $parsed = json_decode($config);
+      $result = $this->client->initiateAuth([
+        'AuthFlow' => 'USER_PASSWORD_AUTH',
+        'ClientId' => $parsed->clientId,
+        'UserPoolId' => $parsed->poolId,
         'AuthParameters' => [
           'USERNAME' => $username,
           'PASSWORD' => $password,
         ],
       ]);
     } catch (\Exception $e) {
-      return "[ERROR] AWS Cognito: $e->getMessage()";
+      return "[ERROR] AWS Cognito: $e";
     }
   
-    $accessToken = $result->get('AuthenticationResult')['AccessToken']
+    $accessToken = $result->get('AuthenticationResult')['AccessToken'];
   
     if ($this->$useCookie) {
       $this->setAuthenticationCookie(accessToken);
@@ -71,3 +73,5 @@ class AWSCognitoWrapper
     return $_COOKIE[self::COOKIE_NAME] ?? '';
   }
 }
+
+?>
