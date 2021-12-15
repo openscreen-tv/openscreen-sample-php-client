@@ -1,9 +1,9 @@
 <?php
-namespace AWSCognitoApp;
+namespace AWSCognito;
 
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
-class OpenscreenWrapper
+class AWSCognitoWrapper
 {
   private const COOKIE_NAME = 'openscreen-cognito-access-token';
 
@@ -11,6 +11,8 @@ class OpenscreenWrapper
 
   private $client
   private $user = null;
+  private $clientId
+  private $userPoolId
 
   public function __construct(boolval $useCookie)
 
@@ -30,7 +32,6 @@ class OpenscreenWrapper
           // an exception indicates the accesstoken is incorrect - $this->user will still be null
       }
     }
-  }
 
   public function authenticate(string $username, string $password) : string {
     try {
@@ -46,16 +47,16 @@ class OpenscreenWrapper
     } catch (\Exception $e) {
       return "[ERROR] AWS Cognito: $e->getMessage()";
     }
-
+  
     $accessToken = $result->get('AuthenticationResult')['AccessToken']
-
+  
     if ($this->$useCookie) {
       $this->setAuthenticationCookie(accessToken);
     }
-
+  
     return accessToken;
   }
-
+  
   private function setAuthenticationCookie(string $accessToken, $time = 3600) : void {
     /*
      * Please note that plain-text storage of the access token is insecure and
@@ -65,7 +66,7 @@ class OpenscreenWrapper
     */
     setcookie(self::COOKIE_NAME, $accessToken, time() + $time);
   }
-
+  
   private function getAuthenticationCookie() : string {
     return $_COOKIE[self::COOKIE_NAME] ?? '';
   }
