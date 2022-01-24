@@ -4,8 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use Aws\CognitoIdentityProvider\CognitoIdentityProviderClient;
 
 class OpenscreenWrapper {
-  private const COOKIE_NAME = 'openscreen-cognito-access-token';
-  private const CONFIG_URL = 'https://config.openscreen.com/api-pavel.json';
+  private const CONFIG_URL = 'https://config.openscreen.com/prod-aNCxEnLyMSsR8sso.json';
 
   private $debug = false;
   private $config;
@@ -53,6 +52,9 @@ class OpenscreenWrapper {
     return $this->config->endpoint;
   }
 
+  /**
+   * 
+   */
   public function query(string $method = 'GET', string $path, ?array $queryParams = null, ?array $body = null) : ?object {
     $accessToken = $this->getToken();
     $opts = [
